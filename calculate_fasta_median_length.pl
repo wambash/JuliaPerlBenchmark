@@ -9,13 +9,12 @@ my $usage = "Usage: perl $0 <INFILE>";
 my $infile = shift or die $usage;
 open( my $IN, '<', "$infile" ) || die "Unable to open $infile: $!";
 
-# Set variable for list of length values
 my @lengths      = ();
 my $array_length = 0;
 
 while ( defined( my $line = <$IN> ) ) {
 
-    next if $line =~ /\>/;    # Skip the sequence identifier lines
+    next if substr( $line, 0, 1 ) eq '>';   # Skip the sequence identifier lines
 
     chomp $line;
     my $line_length = length $line;

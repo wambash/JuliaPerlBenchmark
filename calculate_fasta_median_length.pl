@@ -1,53 +1,38 @@
 # !/usr/local/bin/perl -w
 # calculate_fasta_median_length.pl
-# Geoffrey Hannigan
-# Elizabeth Grice Lab
-# University of Pennsylvania
 
-# Set use
 use strict;
 use warnings;
 
 # Set files to scalar variables
 my $usage = "Usage: perl $0 <INFILE>";
 my $infile = shift or die $usage;
-open(my $IN, "<", "$infile") || die "Unable to open $infile: $!";
+open( my $IN, '<', "$infile" ) || die "Unable to open $infile: $!";
 
 # Set variable for list of length values
-my @lengths = ();
-my $line_length = 0;
-my $result = 0;
+my @lengths      = ();
+my $array_length = 0;
 
-# Assign lengths of each sequence to the array
-while (my $line = <$IN>) {
-	# Skip the sequence identifier lines
-	if ($line =~ /\>/) {
-		next;
-	} else {
-		# Add  line lengths to array
-		chomp $line;
-		my $line_length = length $line;
-		push @lengths, $line_length;
-	}
+while ( defined( my $line = <$IN> ) ) {
+
+    next if $line =~ /\>/;    # Skip the sequence identifier lines
+
+    chomp $line;
+    my $line_length = length $line;
+    $lengths[$line_length]++;
+
+    $array_length++;
+}
+close $IN;
+
+my @median     = ();
+my $accumulate = 0;
+while ( my ( $key, $value ) = each @lengths ) {
+    $accumulate += $value // 0;
+    next if $accumulate < $array_length / 2;
+    push @median, $key;
+    last if $accumulate > $array_length / 2;
 }
 
-# Sort the length array
-my @sorted_lengths = sort {$a <=> $b} @lengths;
-# Assign array length to a variable
-my $array_length = @sorted_lengths;
-
-# Get the median of the array, depending on whether the link is even or odd
-if ($array_length%2) {
-	# Odd
-	my $result = $sorted_lengths[($array_length/2)];
-	printf $result."\t".$infile."\n";
-} else {
-	# Even
-	my $one = $sorted_lengths[($array_length/2)-1];
-	my $two = $sorted_lengths[($array_length/2)];
-	my $result = ($one + $two) / 2;
-	printf $result."\t".$infile."\n";
-}
-
-#Close out files
-close($IN);
+my $result = ( $median[0] + $median[-1] ) / 2;
+printf $result. "\t" . $infile . "\n";
